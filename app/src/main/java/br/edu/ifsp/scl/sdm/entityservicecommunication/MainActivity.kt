@@ -1,6 +1,10 @@
 package br.edu.ifsp.scl.sdm.entityservicecommunication
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +21,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var incrementServiceIntent: Intent
     private var counter = 0
 
+    private val incrementBroadcastReceiver = object: BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.getIntExtra("VALUE", -1)?.also { value ->
+                counter = value
+                Toast.makeText(this@MainActivity, "You clicked $counter times.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(amb.root)
@@ -32,10 +45,24 @@ class MainActivity : AppCompatActivity() {
                 })
             }
         }
-        InterEntityCommunication.valueLiveData.observe(this) { value ->
-            counter = value
-            Toast.makeText(this, "You clicked $counter times", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                incrementBroadcastReceiver,
+                IntentFilter("INCREMENT_VALUE_ACTION"),
+                RECEIVER_EXPORTED
+            )
+        } else {
+            registerReceiver(incrementBroadcastReceiver, IntentFilter("INCREMENT_VALUE_ACTION"))
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(incrementBroadcastReceiver)
     }
 
     override fun onDestroy() {
