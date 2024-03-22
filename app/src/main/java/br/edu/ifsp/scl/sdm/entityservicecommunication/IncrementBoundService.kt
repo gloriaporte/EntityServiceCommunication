@@ -21,9 +21,11 @@ class IncrementBoundService : Service() {
                 clientMessenger = it
             }
 
-            msg.data.getInt("VALUE").also {
-                Log.v(this.javaClass.simpleName, "Returning incremented value.")
-                clientMessenger.send(Message.obtain().apply { data.putInt("VALUE", it + 1) })
+            msg.data.getInt("VALUE", -1).also {
+                if(it != -1) {
+                    Log.v(this.javaClass.simpleName, "Returning incremented value.")
+                    clientMessenger.send(Message.obtain().apply { data.putInt("VALUE", it + 1) })
+                }
             }
         }
     }
@@ -35,7 +37,7 @@ class IncrementBoundService : Service() {
     override fun onBind(intent: Intent): IBinder {
         Log.v(this.javaClass.simpleName, "Entity bound to the service.")
         ibsMessenger = Messenger(ibsHandler)
-            return ibsMessenger.binder
+        return ibsMessenger.binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
